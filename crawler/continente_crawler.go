@@ -1,13 +1,14 @@
 package crawler
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"strconv"
 	"strings"
 
 	"github.com/MrBolas/MarketScrapper/models"
-	"github.com/go-redis/redis"
+	"github.com/go-redis/redis/v8"
 	"github.com/gocolly/colly"
 )
 
@@ -38,6 +39,8 @@ func NewContinenteCrawler(queueClient *redis.Client, allowedDomains []string, op
 }
 
 func (c *ContinenteCrawler) Crawl() error {
+
+	log.Println("Crawler started on:", c.baseUrl)
 
 	// Find and print all links
 	c.collector.OnHTML("div.product-wrapper", func(e *colly.HTMLElement) {
@@ -102,7 +105,7 @@ func (c *ContinenteCrawler) Crawl() error {
 		if err != nil {
 			log.Println(err)
 		}
-		//c.queueClient.Publish("items", u)
+		c.queueClient.Publish(context.Background(), "items", string(u))
 		log.Println(string(u))
 	})
 
@@ -120,8 +123,8 @@ func (c *ContinenteCrawler) Crawl() error {
 		log.Printf("[%d] <- %s \n", r.StatusCode, r.Request.URL)
 	})
 
-	//c.collector.Visit("https://" + c.baseUrl)
-	c.collector.Visit("https://www.continente.pt/produto/marmelada-light-prisca-5080732.html?showNote=true")
+	c.collector.Visit("https://" + c.baseUrl)
+	//c.collector.Visit("https://www.continente.pt/produto/iogurte-pedacos-magro-natur-coco-corpos-danone-7473538.html?cgid=laticinios-iogurtes-magros")
 	c.collector.Wait()
 	return nil
 }

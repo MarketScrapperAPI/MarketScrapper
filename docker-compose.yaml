@@ -1,0 +1,17 @@
+version: '3'
+services:
+  marketscrapper:
+    build:
+      context: .
+    image: mrbolas/marketscrapper
+    env_file:
+      - .env
+    depends_on:
+      - queue
+    restart: on-failure
+
+  queue:
+    image: redis
+    restart: always
+    ports:
+      - '6379:6379'
