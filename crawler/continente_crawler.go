@@ -40,7 +40,7 @@ func NewContinenteCrawler(queueClient *redis.Client, allowedDomains []string, op
 func (c *ContinenteCrawler) Crawl() error {
 
 	// Find and print all links
-	c.collector.OnHTML("div.product-name-details--wrapper", func(e *colly.HTMLElement) {
+	c.collector.OnHTML("div.product-wrapper", func(e *colly.HTMLElement) {
 		n := e.ChildText("h1.product-name")          // product name
 		b := e.ChildText("a.ct-pdp--brand")          // product brand
 		p := e.ChildText("span.ct-pdp--unit")        // product packaging
@@ -48,6 +48,7 @@ func (c *ContinenteCrawler) Crawl() error {
 		uq := e.ChildText("span.ct-m-unit")          // quantity unit
 		vq := e.ChildText("span.ct-price-value")     // price per quantity
 		//u := e.ChildText("div.ct-tile--price-secondary.ct-m-unit") //quantity unit
+		iu := e.ChildAttr("img.ct-product-image", "src") // price per quantity
 
 		// build model
 		unitValue := strings.SplitAfter(vu, "€")
@@ -84,6 +85,8 @@ func (c *ContinenteCrawler) Crawl() error {
 			PricePerItem:     float32(pricePerUnit),
 			PricePerQuantity: pricePerQtt,
 			QuantityUnit:     unitQtt,
+			Url:              e.Request.URL.String(),
+			ImageUrl:         iu,
 		}
 
 		message := models.Message{
@@ -117,7 +120,8 @@ func (c *ContinenteCrawler) Crawl() error {
 		log.Printf("[%d] <- %s \n", r.StatusCode, r.Request.URL)
 	})
 
-	c.collector.Visit("https://" + c.baseUrl)
+	//c.collector.Visit("https://" + c.baseUrl)
+	c.collector.Visit("https://www.continente.pt/produto/marmelada-light-prisca-5080732.html?showNote=true")
 	c.collector.Wait()
 	return nil
 }

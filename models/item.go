@@ -7,4 +7,6 @@ type Item struct {
 	PricePerItem     float32  `json:"price_per_item"`
 	PricePerQuantity *float32 `json:"price_per_quantity,omitempty"`
 	QuantityUnit     *string  `json:"quantity_unit,omitempty"`
+	Url              string   `json:"url"`
+	ImageUrl         string   `json:"image_url"`
 }
