@@ -55,7 +55,11 @@ func (m *Manager) StartManager() error {
 // Start by Id
 func (m *Manager) StartCrawlerByIdInBackground(Id string) error {
 	if _, ok := m.crawlers[Id]; ok {
-		m.crawlers[Id].GetControls().Running = true
+		ctrl := m.crawlers[Id].GetControls()
+		ctrl.Running = true
+		if ctrl.StartedAt.IsZero() {
+			ctrl.StartedAt = time.Now()
+		}
 		go m.crawlers[Id].Crawl()
 		fmt.Println("Started WebCrawler with Id:", Id)
 	} else {

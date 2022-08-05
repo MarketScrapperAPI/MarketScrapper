@@ -56,9 +56,6 @@ func NewContinenteCrawler(queueClient *redis.Client, options *models.Options, cr
 
 func (c *ContinenteCrawler) Crawl() error {
 	//log.Println("Crawler started on:", c.options.StartingUrl)
-	if c.Control.StartedAt.IsZero() {
-		c.Control.StartedAt = time.Now()
-	}
 
 	// Find and print all links
 	c.collector.OnHTML("div.product-wrapper", func(e *colly.HTMLElement) {
