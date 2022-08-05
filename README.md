@@ -5,7 +5,11 @@ Web crawlers with pre set configurations to scrap prices of Supermarket websites
 ## Architecture
 ```mermaid
 flowchart TD
-A ----> B;
+A[Market1 Crawler] ----> E[queue];
+B[Market2 Crawler] ----> E[queue];
+C[Market3 Crawler] ----> E[queue];
+D[Marketn Crawler] ----> E[queue];
+E --> F[Item Handling Service];
 ```
 ## Summary
 MarketScrapper is a predefined set of web crawlers/scrappers that collect article information form specific market websites.
