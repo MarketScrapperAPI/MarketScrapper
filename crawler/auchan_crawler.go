@@ -45,15 +45,20 @@ func NewAuchanCrawler(queueClient *redis.Client, options *models.Options, crawle
 		channel:     crawlerChan,
 		options:     options,
 		Control: models.CrawlerControl{
-			Id:      options.Id,
-			Running: false,
-			Repeat:  false,
+			Id:          options.Id,
+			Running:     false,
+			Repeat:      false,
+			ScrappedAmt: 0,
+			StartedAt:   time.Time{},
 		},
 	}
 }
 
 func (c *AuchanCrawler) Crawl() error {
-	log.Println("Crawler started on:", c.options.StartingUrl)
+	//log.Println("Crawler started on:", c.options.StartingUrl)
+	if c.Control.StartedAt.IsZero() {
+		c.Control.StartedAt = time.Now()
+	}
 
 	// Find and print all links
 	c.collector.OnHTML("div#maincontent", func(e *colly.HTMLElement) {
@@ -73,10 +78,12 @@ func (c *AuchanCrawler) Crawl() error {
 
 		// build model
 		unitValue := strings.Trim(strings.Split(vu, "€")[0], " ")
-		unValue := strings.Replace(unitValue, ",", ".", -1)
+		unValue := strings.Replace(unitValue, ".", "", -1)
+		unValue = strings.Replace(unValue, ",", ".", -1)
 		pricePerUnit, err := strconv.ParseFloat(unValue, 32)
 		if err != nil {
 			log.Println(err)
+			log.Println(e.Request.URL)
 		}
 
 		var pricePerQtt *float32 = nil
@@ -86,6 +93,7 @@ func (c *AuchanCrawler) Crawl() error {
 			pricePerQuantity64, err := strconv.ParseFloat(quantityString, 32)
 			if err != nil {
 				log.Println(err)
+				log.Println(e.Request.URL)
 			}
 
 			pricePerQuantity32 := float32(pricePerQuantity64)
@@ -123,6 +131,7 @@ func (c *AuchanCrawler) Crawl() error {
 		}
 		msg := string(string(u))
 		c.queueClient.Publish(context.Background(), "items", msg)
+		c.Control.ScrappedAmt = c.Control.ScrappedAmt + 1
 		//log.Println(msg)
 	})
 
@@ -144,7 +153,7 @@ func (c *AuchanCrawler) Crawl() error {
 	c.collector.OnRequest(func(r *colly.Request) {})
 
 	c.collector.OnResponse(func(r *colly.Response) {
-		log.Printf("[%d] <- %s \n", r.StatusCode, r.Request.URL)
+		//log.Printf("[%d] <- %s \n", r.StatusCode, r.Request.URL)
 	})
 
 	//c.collector.Visit("https://" + c.options.StartingUrl)

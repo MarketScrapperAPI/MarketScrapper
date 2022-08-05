@@ -45,15 +45,20 @@ func NewContinenteCrawler(queueClient *redis.Client, options *models.Options, cr
 		channel:     crawlerChan,
 		options:     options,
 		Control: models.CrawlerControl{
-			Id:      options.Id,
-			Running: false,
-			Repeat:  false,
+			Id:          options.Id,
+			Running:     false,
+			Repeat:      false,
+			ScrappedAmt: 0,
+			StartedAt:   time.Time{},
 		},
 	}
 }
 
 func (c *ContinenteCrawler) Crawl() error {
-	log.Println("Crawler started on:", c.options.StartingUrl)
+	//log.Println("Crawler started on:", c.options.StartingUrl)
+	if c.Control.StartedAt.IsZero() {
+		c.Control.StartedAt = time.Now()
+	}
 
 	// Find and print all links
 	c.collector.OnHTML("div.product-wrapper", func(e *colly.HTMLElement) {
@@ -118,7 +123,8 @@ func (c *ContinenteCrawler) Crawl() error {
 		}
 		msg := string(string(u))
 		c.queueClient.Publish(context.Background(), "items", msg)
-		log.Println(msg)
+		c.Control.ScrappedAmt = c.Control.ScrappedAmt + 1
+		//log.Println(msg)
 	})
 
 	// Callback for links on scraped pages
@@ -132,7 +138,7 @@ func (c *ContinenteCrawler) Crawl() error {
 	c.collector.OnRequest(func(r *colly.Request) {})
 
 	c.collector.OnResponse(func(r *colly.Response) {
-		log.Printf("[%d] <- %s \n", r.StatusCode, r.Request.URL)
+		//log.Printf("[%d] <- %s \n", r.StatusCode, r.Request.URL)
 	})
 
 	c.collector.Visit("https://" + c.options.StartingUrl)

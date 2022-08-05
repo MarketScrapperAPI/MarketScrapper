@@ -1,8 +1,10 @@
 package manager
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/MrBolas/MarketScrapper/crawler"
 	"github.com/MrBolas/MarketScrapper/models"
@@ -51,21 +53,44 @@ func (m *Manager) StartManager() error {
 }
 
 // Start by Id
-func (m *Manager) StartCrawlerById(Id string) {
-	m.crawlers[Id].GetControls().Running = true
-	go m.crawlers[Id].Crawl()
-	fmt.Println("Started WebCrawler with Id:", Id)
+func (m *Manager) StartCrawlerByIdInBackground(Id string) error {
+	if _, ok := m.crawlers[Id]; ok {
+		m.crawlers[Id].GetControls().Running = true
+		go m.crawlers[Id].Crawl()
+		fmt.Println("Started WebCrawler with Id:", Id)
+	} else {
+		return errors.New("id does not exist")
+	}
+	return nil
+}
+
+func (m *Manager) StartCrawlerById(Id string) error {
+	if _, ok := m.crawlers[Id]; ok {
+		m.crawlers[Id].GetControls().Running = true
+		fmt.Println("Started WebCrawler with Id:", Id)
+		m.crawlers[Id].Crawl()
+	} else {
+		return errors.New("id does not exist")
+	}
+	return nil
 }
 
 // Set repeat by Id
-func (m *Manager) SetRepeatById(Id string, repeat bool) {
-	m.crawlers[Id].GetControls().Repeat = repeat
+func (m *Manager) SetRepeatById(Id string, repeat bool) error {
+	if _, ok := m.crawlers[Id]; ok {
+		m.crawlers[Id].GetControls().Repeat = repeat
+	} else {
+		return errors.New("id does not exist")
+	}
+	return nil
 }
 
 // Start all
 func (m *Manager) StartAllCrawlers() {
-	for k, _ := range m.crawlers {
-		m.StartCrawlerById(k)
+	for k, v := range m.crawlers {
+		if !v.GetControls().Running {
+			m.StartCrawlerByIdInBackground(k)
+		}
 	}
 }
 
@@ -73,7 +98,21 @@ func (m *Manager) StartAllCrawlers() {
 func (m *Manager) ListCrawlers() error {
 	fmt.Println("Crawlers:")
 	for _, v := range m.crawlers {
-		fmt.Printf("Id: %s 		Running: %s		Repeat: %s\n", v.GetControls().Id, strconv.FormatBool(v.GetControls().Running), strconv.FormatBool(v.GetControls().Repeat))
+		ctrl := v.GetControls()
+
+		strAt := ctrl.StartedAt.Format("15:04:05.000")
+		elapsed := ctrl.StartedAt.Format("15:04:05.000")
+		if ctrl.Running {
+			elapsed = time.Since(ctrl.StartedAt).String()
+		}
+
+		fmt.Printf("Id: %s 	Running: %s	Repeat: %s	Scrapped Items: %d	StartedAt: %s	Elapsed Time %s \n",
+			ctrl.Id,
+			strconv.FormatBool(ctrl.Running),
+			strconv.FormatBool(ctrl.Repeat),
+			ctrl.ScrappedAmt,
+			strAt,
+			elapsed)
 	}
 	return nil
 }

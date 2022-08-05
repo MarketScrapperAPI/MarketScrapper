@@ -22,7 +22,9 @@ type CrawlerMessage struct {
 }
 
 type CrawlerControl struct {
-	Id      string
-	Running bool
-	Repeat  bool
+	Id          string
+	Running     bool
+	Repeat      bool
+	ScrappedAmt int32
+	StartedAt   time.Time
 }
