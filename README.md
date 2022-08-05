@@ -13,6 +13,7 @@ E --> F[Item Handling Service];
 ```
 ## Summary
 MarketScrapper is a predefined set of web crawlers/scrappers that collect article information form specific market websites.
+This information is formated and published from the crawlers into a queue, that is then consumed by a Item Handling Service.
 
 ### Monitor Docker Compose Redis
 To validate incoming notifications we can use:
