@@ -120,3 +120,28 @@ func (m *Manager) ListCrawlers() error {
 	}
 	return nil
 }
+
+// List all Crawlers
+func (m *Manager) CrawlersStatistics() error {
+	fmt.Println("Crawlers:")
+	for _, v := range m.crawlers {
+		ctrl := v.GetControls()
+
+		startedAt := ctrl.StartedAt.Format("15:04:05.000")
+		elapsedTime := ctrl.StartedAt.Format("15:04:05.000")
+		var scrapsPerSecond float32 = 0.0
+		if ctrl.Running {
+			elapsedTimeDuration := time.Since(ctrl.StartedAt)
+			scrapsPerSecond = float32(ctrl.ScrappedAmt) / float32(elapsedTimeDuration/time.Second)
+			elapsedTime = elapsedTimeDuration.String()
+		}
+
+		fmt.Printf("Id: %s	Scrapped Items: %d	StartedAt: %s	Elapsed Time: %s Scraps/second: %f\n",
+			ctrl.Id,
+			ctrl.ScrappedAmt,
+			startedAt,
+			elapsedTime,
+			scrapsPerSecond)
+	}
+	return nil
+}

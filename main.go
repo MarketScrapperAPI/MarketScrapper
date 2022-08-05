@@ -80,9 +80,21 @@ func main() {
 		// convert CRLF to LF
 		text = strings.Replace(text, "\n", "", -1)
 
+		// help
+		if strings.HasPrefix(text, "help") {
+			fmt.Printf("Available commands:\n help -> shows available commands\n ls -> lists available crawlers\n stats -> lists statistics from crawlers\n repeat -> sets crawler to repeat after it's finished\n start -> starts crawler\n")
+			continue
+		}
+
 		// list crawlers
 		if strings.HasPrefix(text, "ls") {
 			mng.ListCrawlers()
+			continue
+		}
+
+		// list crawlers stats
+		if strings.HasPrefix(text, "stats") {
+			mng.CrawlersStatistics()
 			continue
 		}
 
@@ -111,6 +123,7 @@ func main() {
 			args, err := SanitizeInputs(text)
 			if err != nil {
 				fmt.Println(err)
+				fmt.Printf("start <all/crawlerId>\n")
 				continue
 			}
 			if args[0] == "all" {
