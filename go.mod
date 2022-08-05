@@ -1,4 +1,4 @@
-module github.com/MrBolas/MarketScrapper
+module github.com/MarketScrapperAPI/MarketScrapper
 
 go 1.17
 

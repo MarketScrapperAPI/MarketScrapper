@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/MrBolas/MarketScrapper/manager"
+	"github.com/MarketScrapperAPI/MarketScrapper/manager"
 	"github.com/go-redis/redis/v8"
 	"github.com/joho/godotenv"
 )

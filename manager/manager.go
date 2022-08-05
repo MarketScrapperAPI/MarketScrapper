@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/MrBolas/MarketScrapper/crawler"
-	"github.com/MrBolas/MarketScrapper/models"
+	"github.com/MarketScrapperAPI/MarketScrapper/crawler"
+	"github.com/MarketScrapperAPI/MarketScrapper/models"
 	"github.com/go-redis/redis/v8"
 )
 

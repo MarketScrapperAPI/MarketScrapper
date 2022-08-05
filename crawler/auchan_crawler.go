@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/MrBolas/MarketScrapper/models"
+	"github.com/MarketScrapperAPI/MarketScrapper/models"
 	"github.com/go-redis/redis/v8"
 	"github.com/gocolly/colly"
 )

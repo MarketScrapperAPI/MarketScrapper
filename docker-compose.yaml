@@ -3,7 +3,7 @@ services:
   marketscrapper:
     build:
       context: .
-    image: mrbolas/marketscrapper
+    image: marketscrapperapi/marketscrapper
     env_file:
       - .env
     depends_on:
