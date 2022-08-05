@@ -1,6 +1,7 @@
 package crawler
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"strconv"
@@ -15,15 +16,18 @@ import (
 type AuchanCrawler struct {
 	queueClient *redis.Client
 	collector   *colly.Collector
-	options     *Options
+	channel     chan<- models.CrawlerMessage
+	options     *models.Options
+	Control     models.CrawlerControl
 }
 
-var AuchantOptions = Options{
+var AuchantOptions = models.Options{
+	Id:          "Auchan",
 	Delay:       time.Millisecond,
 	StartingUrl: "www.auchan.pt",
 }
 
-func NewAuchanCrawler(queueClient *redis.Client, options *Options) AuchanCrawler {
+func NewAuchanCrawler(queueClient *redis.Client, options *models.Options, crawlerChan chan<- models.CrawlerMessage) AuchanCrawler {
 	allowedDomains := append(options.AllowedDomains, options.StartingUrl)
 	c := colly.NewCollector(
 		colly.AllowedDomains(allowedDomains...),
@@ -38,12 +42,17 @@ func NewAuchanCrawler(queueClient *redis.Client, options *Options) AuchanCrawler
 	return AuchanCrawler{
 		queueClient: queueClient,
 		collector:   c,
+		channel:     crawlerChan,
 		options:     options,
+		Control: models.CrawlerControl{
+			Id:      options.Id,
+			Running: false,
+			Repeat:  false,
+		},
 	}
 }
 
 func (c *AuchanCrawler) Crawl() error {
-
 	log.Println("Crawler started on:", c.options.StartingUrl)
 
 	// Find and print all links
@@ -102,7 +111,7 @@ func (c *AuchanCrawler) Crawl() error {
 				ImageUrl:         iu,
 			},
 			Market: models.Market{
-				Name:     "Auchan",
+				Name:     c.options.Id,
 				Location: "Online",
 			},
 		}
@@ -113,8 +122,8 @@ func (c *AuchanCrawler) Crawl() error {
 			log.Println(err)
 		}
 		msg := string(string(u))
-		//c.queueClient.Publish(context.Background(), "items", msg)
-		log.Println(msg)
+		c.queueClient.Publish(context.Background(), "items", msg)
+		//log.Println(msg)
 	})
 
 	// Callback for links on scraped pages
@@ -139,7 +148,12 @@ func (c *AuchanCrawler) Crawl() error {
 	})
 
 	//c.collector.Visit("https://" + c.options.StartingUrl)
-	c.collector.Visit("https://www.auchan.pt/pt/bebidas-e-garrafeira/aguas/aguas-sem-gas/agua-mineral-luso-garrafao-7l/1146935.html")
+	c.collector.Visit("https://www.auchan.pt/")
 	c.collector.Wait()
+	c.channel <- models.CrawlerMessage{Id: c.options.Id, Status: "Done"}
 	return nil
+}
+
+func (c *AuchanCrawler) GetControls() *models.CrawlerControl {
+	return &c.Control
 }

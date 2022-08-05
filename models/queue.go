@@ -10,3 +10,13 @@ type Item struct {
 	Url              string   `json:"url"`
 	ImageUrl         string   `json:"image_url"`
 }
+
+type Market struct {
+	Name     string `json:"name"`
+	Location string `json:"location"`
+}
+
+type Message struct {
+	Item   Item   `json:"item"`
+	Market Market `json:"market"`
+}

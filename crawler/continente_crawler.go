@@ -16,15 +16,18 @@ import (
 type ContinenteCrawler struct {
 	queueClient *redis.Client
 	collector   *colly.Collector
-	options     *Options
+	channel     chan<- models.CrawlerMessage
+	options     *models.Options
+	Control     models.CrawlerControl
 }
 
-var ContinentOptions = Options{
+var ContinentOptions = models.Options{
+	Id:          "Continente",
 	Delay:       time.Millisecond,
 	StartingUrl: "www.continente.pt",
 }
 
-func NewContinenteCrawler(queueClient *redis.Client, options *Options) ContinenteCrawler {
+func NewContinenteCrawler(queueClient *redis.Client, options *models.Options, crawlerChan chan<- models.CrawlerMessage) ContinenteCrawler {
 	allowedDomains := append(options.AllowedDomains, options.StartingUrl)
 	c := colly.NewCollector(
 		colly.AllowedDomains(allowedDomains...),
@@ -39,12 +42,17 @@ func NewContinenteCrawler(queueClient *redis.Client, options *Options) Continent
 	return ContinenteCrawler{
 		queueClient: queueClient,
 		collector:   c,
+		channel:     crawlerChan,
 		options:     options,
+		Control: models.CrawlerControl{
+			Id:      options.Id,
+			Running: false,
+			Repeat:  false,
+		},
 	}
 }
 
 func (c *ContinenteCrawler) Crawl() error {
-
 	log.Println("Crawler started on:", c.options.StartingUrl)
 
 	// Find and print all links
@@ -98,7 +106,7 @@ func (c *ContinenteCrawler) Crawl() error {
 				ImageUrl:         iu,
 			},
 			Market: models.Market{
-				Name:     "Continente",
+				Name:     c.options.Id,
 				Location: "Online",
 			},
 		}
@@ -129,5 +137,10 @@ func (c *ContinenteCrawler) Crawl() error {
 
 	c.collector.Visit("https://" + c.options.StartingUrl)
 	c.collector.Wait()
+	c.channel <- models.CrawlerMessage{Id: c.options.Id, Status: "Done"}
 	return nil
+}
+
+func (c *ContinenteCrawler) GetControls() *models.CrawlerControl {
+	return &c.Control
 }

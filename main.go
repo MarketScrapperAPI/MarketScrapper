@@ -5,7 +5,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/MrBolas/MarketScrapper/crawler"
+	"github.com/MrBolas/MarketScrapper/manager"
 	"github.com/go-redis/redis/v8"
 	"github.com/joho/godotenv"
 )
@@ -47,9 +47,10 @@ func main() {
 		DB:       dBNumber,
 	})
 
-	//ccrawler := crawler.NewContinenteCrawler(rdb, &crawler.ContinentOptions)
-	//ccrawler.Crawl()
+	manager := manager.NewCrawlerManager(rdb)
+	manager.ListCrawlers()
+	go manager.StartManager()
+	manager.StartAllCrawlers()
+	manager.ListCrawlers()
 
-	pgcrawler := crawler.NewAuchanCrawler(rdb, &crawler.AuchantOptions)
-	pgcrawler.Crawl()
 }
