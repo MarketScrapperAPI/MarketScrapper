@@ -1,9 +1,13 @@
 package crawler
 
 import (
+	"encoding/json"
 	"log"
+	"strconv"
+	"strings"
 	"time"
 
+	"github.com/MrBolas/MarketScrapper/models"
 	"github.com/go-redis/redis/v8"
 	"github.com/gocolly/colly"
 )
@@ -43,19 +47,74 @@ func (c *AuchanCrawler) Crawl() error {
 	log.Println("Crawler started on:", c.options.StartingUrl)
 
 	// Find and print all links
-	c.collector.OnHTML("div.auc-pdp__header", func(e *colly.HTMLElement) {
+	c.collector.OnHTML("div#maincontent", func(e *colly.HTMLElement) {
+
 		n := e.ChildText("h1.product-name") // product name
 
-		log.Printf("product name: %s \n ", n)
-	})
-	c.collector.OnHTML("div.product-detail", func(e *colly.HTMLElement) {
-		vu := e.ChildText("span.value") // price per unit
+		// validates if it's a product page
+		if n == "" {
+			return
+		}
+
+		vu := e.ChildText("span.sales > span.value") // price per unit
 		//uq := e.ChildText("span.ct-m-unit")          // quantity unit
 		vq := e.ChildText("span.auc-measures--price-per-unit") // price per quantity
 		//u := e.ChildText("div.ct-tile--price-secondary.ct-m-unit") //quantity unit
-		iu := e.ChildAttr("img.zoomImg", "src") // image url
+		iu := e.ChildAttr("div:nth-child(1) > picture > img", "src") // image url
 
-		log.Printf("price: %s \n price per quantity: %s \n imageUrl: %s \n", vu, vq, iu)
+		// build model
+		unitValue := strings.Trim(strings.Split(vu, "€")[0], " ")
+		unValue := strings.Replace(unitValue, ",", ".", -1)
+		pricePerUnit, err := strconv.ParseFloat(unValue, 32)
+		if err != nil {
+			log.Println(err)
+		}
+
+		var pricePerQtt *float32 = nil
+		if vq != "" {
+			quantityString := strings.Trim(strings.Split(vq, "€")[0], " ")
+			//quantityStringValue := strings.Replace(quantityString[1], ",", ".", -1)
+			pricePerQuantity64, err := strconv.ParseFloat(quantityString, 32)
+			if err != nil {
+				log.Println(err)
+			}
+
+			pricePerQuantity32 := float32(pricePerQuantity64)
+			pricePerQtt = &pricePerQuantity32
+		}
+
+		var unitQtt *string = nil
+		if vq != "" {
+			unitQuantityString := strings.Split(vq, "/")
+			unitQuantityStringValue := unitQuantityString[len(unitQuantityString)-1]
+			unitQtt = &unitQuantityStringValue
+		}
+
+		message := models.Message{
+			Item: models.Item{
+				Name:             n,
+				Brand:            "",
+				Package:          "",
+				PricePerItem:     float32(pricePerUnit),
+				PricePerQuantity: pricePerQtt,
+				QuantityUnit:     unitQtt,
+				Url:              e.Request.URL.String(),
+				ImageUrl:         iu,
+			},
+			Market: models.Market{
+				Name:     "Auchan",
+				Location: "Online",
+			},
+		}
+
+		// send with redis
+		u, err := json.Marshal(message)
+		if err != nil {
+			log.Println(err)
+		}
+		msg := string(string(u))
+		//c.queueClient.Publish(context.Background(), "items", msg)
+		log.Println(msg)
 	})
 
 	// Callback for links on scraped pages
@@ -79,7 +138,8 @@ func (c *AuchanCrawler) Crawl() error {
 		log.Printf("[%d] <- %s \n", r.StatusCode, r.Request.URL)
 	})
 
-	c.collector.Visit("https://" + c.options.StartingUrl)
+	//c.collector.Visit("https://" + c.options.StartingUrl)
+	c.collector.Visit("https://www.auchan.pt/pt/bebidas-e-garrafeira/aguas/aguas-sem-gas/agua-mineral-luso-garrafao-7l/1146935.html")
 	c.collector.Wait()
 	return nil
 }
