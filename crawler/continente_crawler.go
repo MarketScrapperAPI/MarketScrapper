@@ -70,7 +70,8 @@ func (c *ContinenteCrawler) Crawl() error {
 
 		// build model
 		unitValue := strings.SplitAfter(vu, "€")
-		unValue := strings.Replace(unitValue[1], ",", ".", -1)
+		unValue := strings.Replace(unitValue[1], ".", "", -1)
+		unValue = strings.Replace(unValue, ",", ".", -1)
 		pricePerUnit, err := strconv.ParseFloat(unValue, 32)
 		if err != nil {
 			log.Println(err)

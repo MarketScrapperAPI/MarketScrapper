@@ -124,7 +124,6 @@ func main() {
 			}
 			continue
 		}
-
 		fmt.Println("Unknown command")
 	}
 }

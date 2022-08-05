@@ -110,7 +110,7 @@ func (m *Manager) ListCrawlers() error {
 			elapsed = time.Since(ctrl.StartedAt).String()
 		}
 
-		fmt.Printf("Id: %s 	Running: %s	Repeat: %s	Scrapped Items: %d	StartedAt: %s	Elapsed Time %s \n",
+		fmt.Printf("Id: %s 	Running: %s	Repeat: %s	Scrapped Items: %d	StartedAt: %s	Elapsed Time: %s \n",
 			ctrl.Id,
 			strconv.FormatBool(ctrl.Running),
 			strconv.FormatBool(ctrl.Repeat),
