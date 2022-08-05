@@ -4,7 +4,6 @@ import (
 	"log"
 	"os"
 	"strconv"
-	"time"
 
 	"github.com/MrBolas/MarketScrapper/crawler"
 	"github.com/go-redis/redis/v8"
@@ -48,11 +47,9 @@ func main() {
 		DB:       dBNumber,
 	})
 
-	// CrawlerOptions
-	options := &crawler.Options{
-		Delay: time.Millisecond,
-	}
+	//ccrawler := crawler.NewContinenteCrawler(rdb, &crawler.ContinentOptions)
+	//ccrawler.Crawl()
 
-	ccrawler := crawler.NewContinenteCrawler(rdb, []string{}, options)
-	ccrawler.Crawl()
+	pgcrawler := crawler.NewAuchanCrawler(rdb, &crawler.AuchantOptions)
+	pgcrawler.Crawl()
 }

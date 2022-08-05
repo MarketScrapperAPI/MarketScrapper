@@ -6,6 +6,7 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/MrBolas/MarketScrapper/models"
 	"github.com/go-redis/redis/v8"
@@ -15,12 +16,16 @@ import (
 type ContinenteCrawler struct {
 	queueClient *redis.Client
 	collector   *colly.Collector
-	baseUrl     string
+	options     *Options
 }
 
-func NewContinenteCrawler(queueClient *redis.Client, allowedDomains []string, options *Options) ContinenteCrawler {
-	continenteUrl := "www.continente.pt"
-	allowedDomains = append(allowedDomains, continenteUrl)
+var ContinentOptions = Options{
+	Delay:       time.Millisecond,
+	StartingUrl: "www.continente.pt",
+}
+
+func NewContinenteCrawler(queueClient *redis.Client, options *Options) ContinenteCrawler {
+	allowedDomains := append(options.AllowedDomains, options.StartingUrl)
 	c := colly.NewCollector(
 		colly.AllowedDomains(allowedDomains...),
 		colly.Async(true),
@@ -34,13 +39,13 @@ func NewContinenteCrawler(queueClient *redis.Client, allowedDomains []string, op
 	return ContinenteCrawler{
 		queueClient: queueClient,
 		collector:   c,
-		baseUrl:     continenteUrl,
+		options:     options,
 	}
 }
 
 func (c *ContinenteCrawler) Crawl() error {
 
-	log.Println("Crawler started on:", c.baseUrl)
+	log.Println("Crawler started on:", c.options.StartingUrl)
 
 	// Find and print all links
 	c.collector.OnHTML("div.product-wrapper", func(e *colly.HTMLElement) {
@@ -51,7 +56,7 @@ func (c *ContinenteCrawler) Crawl() error {
 		uq := e.ChildText("span.ct-m-unit")          // quantity unit
 		vq := e.ChildText("span.ct-price-value")     // price per quantity
 		//u := e.ChildText("div.ct-tile--price-secondary.ct-m-unit") //quantity unit
-		iu := e.ChildAttr("img.ct-product-image", "src") // price per quantity
+		iu := e.ChildAttr("img.ct-product-image", "src") // image url
 
 		// build model
 		unitValue := strings.SplitAfter(vu, "€")
@@ -81,19 +86,17 @@ func (c *ContinenteCrawler) Crawl() error {
 			unitQtt = &unitQuantityStringValue
 		}
 
-		item := models.Item{
-			Name:             n,
-			Brand:            b,
-			Package:          p,
-			PricePerItem:     float32(pricePerUnit),
-			PricePerQuantity: pricePerQtt,
-			QuantityUnit:     unitQtt,
-			Url:              e.Request.URL.String(),
-			ImageUrl:         iu,
-		}
-
 		message := models.Message{
-			Item: item,
+			Item: models.Item{
+				Name:             n,
+				Brand:            b,
+				Package:          p,
+				PricePerItem:     float32(pricePerUnit),
+				PricePerQuantity: pricePerQtt,
+				QuantityUnit:     unitQtt,
+				Url:              e.Request.URL.String(),
+				ImageUrl:         iu,
+			},
 			Market: models.Market{
 				Name:     "Continente",
 				Location: "Online",
@@ -105,8 +108,9 @@ func (c *ContinenteCrawler) Crawl() error {
 		if err != nil {
 			log.Println(err)
 		}
-		c.queueClient.Publish(context.Background(), "items", string(u))
-		log.Println(string(u))
+		msg := string(string(u))
+		c.queueClient.Publish(context.Background(), "items", msg)
+		log.Println(msg)
 	})
 
 	// Callback for links on scraped pages
@@ -123,8 +127,7 @@ func (c *ContinenteCrawler) Crawl() error {
 		log.Printf("[%d] <- %s \n", r.StatusCode, r.Request.URL)
 	})
 
-	c.collector.Visit("https://" + c.baseUrl)
-	//c.collector.Visit("https://www.continente.pt/produto/iogurte-pedacos-magro-natur-coco-corpos-danone-7473538.html?cgid=laticinios-iogurtes-magros")
+	c.collector.Visit("https://" + c.options.StartingUrl)
 	c.collector.Wait()
 	return nil
 }

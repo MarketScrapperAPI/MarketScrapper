@@ -7,5 +7,7 @@ type ICrawler interface {
 }
 
 type Options struct {
-	Delay time.Duration
+	Delay          time.Duration
+	StartingUrl    string
+	AllowedDomains []string
 }
