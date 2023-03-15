@@ -15,4 +15,4 @@ RUN go install -v ./...
 ARG target=Auchan
 
 # Run the executable
-CMD ["MarketScrapper -t ${target}"]
+CMD ["MarketScrapper -t Auchan"]
