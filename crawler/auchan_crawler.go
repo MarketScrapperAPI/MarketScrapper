@@ -126,10 +126,10 @@ func (c *AuchanCrawler) Crawl() error {
 		if err != nil {
 			log.Println(err)
 		}
-		msg := string(string(u))
+		msg := string(u)
+		log.Println(msg)
 		c.queueClient.Publish(context.Background(), "items", msg)
 		c.Control.ScrappedAmt = c.Control.ScrappedAmt + 1
-		//log.Println(msg)
 	})
 
 	// Callback for links on scraped pages
