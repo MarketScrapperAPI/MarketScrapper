@@ -8,7 +8,6 @@ spec:
   selector:
     matchLabels:
       app: market-scrapper
-  replicas: 1
   strategy:
     type: RollingUpdate
   template:
@@ -17,13 +16,14 @@ spec:
         app: market-scrapper
     spec:
       containers:
-       —name: market-scrapper
-          image: mrbolas/market_scrapper
-          resources:
-            limits:
-              memory: 200Mi
-            requests:
-              cpu: 100m
-              memory: 200Mi
-          ports:
-           —containerPort: 80
+      - image: mrbolas/market_scrapper
+        name: market-scrapper
+        ports:
+        - containerPort: 8080
+        env:
+        - name: REDIS_HOST
+          value: queue
+        - name: REDIS_PORT
+          value: "6379"
+        - name: REDIS_DB
+          value: "0"

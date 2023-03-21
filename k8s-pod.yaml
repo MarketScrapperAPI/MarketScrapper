@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Pod
+metadata:
+   name: market-scrapper
+spec:
+   containers:
+   - name: market-scrapper
+     image: mrbolas/market_scrapper:v1
+     ports:
+     - containerPort: 6379
