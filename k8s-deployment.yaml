@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: market-scrapper
+  labels:
+    app: market-scrapper
+spec:
+  selector:
+    matchLabels:
+      app: market-scrapper
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: market-scrapper
+    spec:
+      containers:
+       —name: market-scrapper
+          image: mrbolas/market_scrapper
+          resources:
+            limits:
+              memory: 200Mi
+            requests:
+              cpu: 100m
+              memory: 200Mi
+          ports:
+           —containerPort: 80
