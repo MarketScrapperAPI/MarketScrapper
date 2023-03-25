@@ -20,3 +20,8 @@ To validate incoming notifications we can use:
 ```shell
 docker exec -it marketscrapper_queue_1 redis-cli -h localhost subscribe items
 ```
+
+#### For kubernetes use
+```shell
+kubectl exec -it redis-0 -- redis-cli
+```

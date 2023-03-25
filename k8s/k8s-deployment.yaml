@@ -16,13 +16,13 @@ spec:
         app: market-scrapper
     spec:
       containers:
-      - image: mrbolas/market_scrapper
-        name: market-scrapper
+      - name: market-scrapper
+        image: mrbolas/market_scrapper:v1
         ports:
         - containerPort: 8080
         env:
         - name: REDIS_HOST
-          value: queue
+          value: "redis-cart"
         - name: REDIS_PORT
           value: "6379"
         - name: REDIS_DB
