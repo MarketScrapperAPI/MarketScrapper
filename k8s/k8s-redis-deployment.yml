@@ -69,7 +69,6 @@ kind: Service
 metadata:
   name: redis-cart
 spec:
-  clusterIP: 10.96.0.40
   type: ClusterIP
   selector:
     app: redis-cart

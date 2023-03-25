@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: market-scrapper
-        image: mrbolas/market_scrapper:v1
+        image: mrbolas/market_scrapper:v1-release
         ports:
         - containerPort: 8080
         env:
