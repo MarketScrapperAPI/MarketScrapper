@@ -12,7 +12,5 @@ RUN go get -d -v ./...
 # Install the package
 RUN go install -v ./...
 
-ARG target=Auchan
-
-# Run the executable
-CMD ["MarketScrapper","-t","Auchan"]
+# Run the executable (being triggered by k8s)
+# CMD ["MarketScrapper","-t","Auchan"]
