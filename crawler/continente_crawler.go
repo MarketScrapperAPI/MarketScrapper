@@ -120,9 +120,10 @@ func (c *ContinenteCrawler) Crawl() error {
 			log.Println(err)
 		}
 		msg := string(string(u))
+		// Message sent to the Pub/Sub channel
+		log.Println(msg)
 		c.queueClient.Publish(context.Background(), "items", msg)
 		c.Control.ScrappedAmt = c.Control.ScrappedAmt + 1
-		//log.Println(msg)
 	})
 
 	// Callback for links on scraped pages
@@ -136,7 +137,8 @@ func (c *ContinenteCrawler) Crawl() error {
 	c.collector.OnRequest(func(r *colly.Request) {})
 
 	c.collector.OnResponse(func(r *colly.Response) {
-		//log.Printf("[%d] <- %s \n", r.StatusCode, r.Request.URL)
+		// HTTP response
+		log.Printf("[%d] <- %s \n", r.StatusCode, r.Request.URL)
 	})
 
 	c.collector.Visit("https://" + c.options.StartingUrl)
