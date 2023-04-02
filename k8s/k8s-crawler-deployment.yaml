@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: market-scrapper-auchan
-        image: mrbolas/market_crawler:v1
+        image: mrbolas/market_crawler:v0.1
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
@@ -31,7 +31,7 @@ spec:
         command: ["MarketScrapper"]
         args: ["-t","Auchan"]
       - name: market-scrapper-continente
-        image: mrbolas/market_crawler:v1
+        image: mrbolas/market_crawler:v0.1
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
